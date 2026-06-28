@@ -16,6 +16,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedProvidersRouteImport } from './routes/_authenticated/providers'
 import { Route as AuthenticatedMedicationsRouteImport } from './routes/_authenticated/medications'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
+import { Route as AuthenticatedFamilyRouteImport } from './routes/_authenticated/family'
 import { Route as AuthenticatedAppointmentsRouteImport } from './routes/_authenticated/appointments'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -53,6 +54,11 @@ const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
   path: '/home',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedFamilyRoute = AuthenticatedFamilyRouteImport.update({
+  id: '/family',
+  path: '/family',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAppointmentsRoute =
   AuthenticatedAppointmentsRouteImport.update({
     id: '/appointments',
@@ -65,6 +71,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/appointments': typeof AuthenticatedAppointmentsRoute
+  '/family': typeof AuthenticatedFamilyRoute
   '/home': typeof AuthenticatedHomeRoute
   '/medications': typeof AuthenticatedMedicationsRoute
   '/providers': typeof AuthenticatedProvidersRoute
@@ -74,6 +81,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/appointments': typeof AuthenticatedAppointmentsRoute
+  '/family': typeof AuthenticatedFamilyRoute
   '/home': typeof AuthenticatedHomeRoute
   '/medications': typeof AuthenticatedMedicationsRoute
   '/providers': typeof AuthenticatedProvidersRoute
@@ -85,6 +93,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/appointments': typeof AuthenticatedAppointmentsRoute
+  '/_authenticated/family': typeof AuthenticatedFamilyRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/medications': typeof AuthenticatedMedicationsRoute
   '/_authenticated/providers': typeof AuthenticatedProvidersRoute
@@ -96,6 +105,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/appointments'
+    | '/family'
     | '/home'
     | '/medications'
     | '/providers'
@@ -105,6 +115,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/appointments'
+    | '/family'
     | '/home'
     | '/medications'
     | '/providers'
@@ -115,6 +126,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/_authenticated/appointments'
+    | '/_authenticated/family'
     | '/_authenticated/home'
     | '/_authenticated/medications'
     | '/_authenticated/providers'
@@ -178,6 +190,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHomeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/family': {
+      id: '/_authenticated/family'
+      path: '/family'
+      fullPath: '/family'
+      preLoaderRoute: typeof AuthenticatedFamilyRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/appointments': {
       id: '/_authenticated/appointments'
       path: '/appointments'
@@ -190,6 +209,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAppointmentsRoute: typeof AuthenticatedAppointmentsRoute
+  AuthenticatedFamilyRoute: typeof AuthenticatedFamilyRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedMedicationsRoute: typeof AuthenticatedMedicationsRoute
   AuthenticatedProvidersRoute: typeof AuthenticatedProvidersRoute
@@ -197,6 +217,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAppointmentsRoute: AuthenticatedAppointmentsRoute,
+  AuthenticatedFamilyRoute: AuthenticatedFamilyRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedMedicationsRoute: AuthenticatedMedicationsRoute,
   AuthenticatedProvidersRoute: AuthenticatedProvidersRoute,
