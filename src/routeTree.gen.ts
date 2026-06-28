@@ -14,6 +14,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedProvidersRouteImport } from './routes/_authenticated/providers'
+import { Route as AuthenticatedMedicationsRouteImport } from './routes/_authenticated/medications'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedAppointmentsRouteImport } from './routes/_authenticated/appointments'
 
@@ -41,6 +42,12 @@ const AuthenticatedProvidersRoute = AuthenticatedProvidersRouteImport.update({
   path: '/providers',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedMedicationsRoute =
+  AuthenticatedMedicationsRouteImport.update({
+    id: '/medications',
+    path: '/medications',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
   id: '/home',
   path: '/home',
@@ -59,6 +66,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/appointments': typeof AuthenticatedAppointmentsRoute
   '/home': typeof AuthenticatedHomeRoute
+  '/medications': typeof AuthenticatedMedicationsRoute
   '/providers': typeof AuthenticatedProvidersRoute
 }
 export interface FileRoutesByTo {
@@ -67,6 +75,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/appointments': typeof AuthenticatedAppointmentsRoute
   '/home': typeof AuthenticatedHomeRoute
+  '/medications': typeof AuthenticatedMedicationsRoute
   '/providers': typeof AuthenticatedProvidersRoute
 }
 export interface FileRoutesById {
@@ -77,6 +86,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/appointments': typeof AuthenticatedAppointmentsRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
+  '/_authenticated/medications': typeof AuthenticatedMedicationsRoute
   '/_authenticated/providers': typeof AuthenticatedProvidersRoute
 }
 export interface FileRouteTypes {
@@ -87,6 +97,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/appointments'
     | '/home'
+    | '/medications'
     | '/providers'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -95,6 +106,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/appointments'
     | '/home'
+    | '/medications'
     | '/providers'
   id:
     | '__root__'
@@ -104,6 +116,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/_authenticated/appointments'
     | '/_authenticated/home'
+    | '/_authenticated/medications'
     | '/_authenticated/providers'
   fileRoutesById: FileRoutesById
 }
@@ -151,6 +164,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProvidersRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/medications': {
+      id: '/_authenticated/medications'
+      path: '/medications'
+      fullPath: '/medications'
+      preLoaderRoute: typeof AuthenticatedMedicationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/home': {
       id: '/_authenticated/home'
       path: '/home'
@@ -171,12 +191,14 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAppointmentsRoute: typeof AuthenticatedAppointmentsRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
+  AuthenticatedMedicationsRoute: typeof AuthenticatedMedicationsRoute
   AuthenticatedProvidersRoute: typeof AuthenticatedProvidersRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAppointmentsRoute: AuthenticatedAppointmentsRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
+  AuthenticatedMedicationsRoute: AuthenticatedMedicationsRoute,
   AuthenticatedProvidersRoute: AuthenticatedProvidersRoute,
 }
 
