@@ -89,6 +89,107 @@ export type Database = {
         }
         Relationships: []
       }
+      provider_locations: {
+        Row: {
+          address_line1: string | null
+          address_line2: string | null
+          city: string | null
+          created_at: string
+          id: string
+          label: string | null
+          phone: string | null
+          postal_code: string | null
+          provider_id: string
+          state: string | null
+          updated_at: string
+        }
+        Insert: {
+          address_line1?: string | null
+          address_line2?: string | null
+          city?: string | null
+          created_at?: string
+          id?: string
+          label?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          provider_id: string
+          state?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address_line1?: string | null
+          address_line2?: string | null
+          city?: string | null
+          created_at?: string
+          id?: string
+          label?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          provider_id?: string
+          state?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_locations_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      providers: {
+        Row: {
+          created_at: string
+          email: string | null
+          fax: string | null
+          id: string
+          is_hidden: boolean
+          name: string
+          notes: string | null
+          npi: string | null
+          owner_id: string
+          phone: string | null
+          practice_name: string | null
+          specialty: string | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          fax?: string | null
+          id?: string
+          is_hidden?: boolean
+          name: string
+          notes?: string | null
+          npi?: string | null
+          owner_id: string
+          phone?: string | null
+          practice_name?: string | null
+          specialty?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          fax?: string | null
+          id?: string
+          is_hidden?: boolean
+          name?: string
+          notes?: string | null
+          npi?: string | null
+          owner_id?: string
+          phone?: string | null
+          practice_name?: string | null
+          specialty?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
