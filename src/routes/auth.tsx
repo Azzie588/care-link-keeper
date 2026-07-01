@@ -39,12 +39,10 @@ function AuthPage() {
   const [relationship, setRelationship] = useState("Me");
   const [busy, setBusy] = useState(false);
 
-  // Recovery flow (code-based, no email link redirect needed)
-  const [codeSent, setCodeSent] = useState(false);
-  const [code, setCode] = useState("");
-  const [newPassword, setNewPassword] = useState("");
+  const [resetSent, setResetSent] = useState(false);
 
   useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("reset") === "1") setMode("reset");
     supabase.auth.getUser().then(({ data }) => {
       if (data.user) navigate({ to: "/home" });
     });
@@ -84,34 +82,15 @@ function AuthPage() {
       return;
     }
     setBusy(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
     setBusy(false);
     if (error) {
       toast.error(friendlyAuthError(error.message));
     } else {
-      setCodeSent(true);
-      toast.success("Check your email for a 6-digit code.");
-    }
-  }
-
-  async function verifyCodeAndSetPassword(e: React.FormEvent) {
-    e.preventDefault();
-    setBusy(true);
-    try {
-      const { error: verifyError } = await supabase.auth.verifyOtp({
-        email,
-        token: code.trim(),
-        type: "recovery",
-      });
-      if (verifyError) throw verifyError;
-      const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
-      if (updateError) throw updateError;
-      toast.success("Password updated. You're signed in.");
-      navigate({ to: "/home" });
-    } catch (err) {
-      toast.error(friendlyAuthError(err instanceof Error ? err.message : "Something went wrong"));
-    } finally {
-      setBusy(false);
+      setResetSent(true);
+      toast.success("Check your email for a password reset link.");
     }
   }
 
@@ -134,7 +113,7 @@ function AuthPage() {
               <div>
                 <h2 className="text-xl font-semibold">Reset your password</h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  We'll email you a 6-digit code. Type it below along with a new password — no link to click.
+                  We'll email you a secure link that brings you back here to choose a new password.
                 </p>
               </div>
               <div className="flex flex-col gap-2">
@@ -150,54 +129,20 @@ function AuthPage() {
                 />
               </div>
 
-              {!codeSent ? (
-                <Button onClick={sendResetCode} disabled={busy || !email} className="h-12 text-base">
-                  {busy ? "Sending…" : "Email me a code"}
-                </Button>
-              ) : (
-                <form onSubmit={verifyCodeAndSetPassword} className="flex flex-col gap-4">
-                  <div className="flex flex-col gap-2">
-                    <Label htmlFor="code" className="text-base">6-digit code</Label>
-                    <Input
-                      id="code"
-                      required
-                      inputMode="numeric"
-                      value={code}
-                      onChange={(e) => setCode(e.target.value)}
-                      className="h-12 text-base tracking-widest"
-                      placeholder="123456"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <Label htmlFor="new-pw" className="text-base">New password</Label>
-                    <Input
-                      id="new-pw"
-                      type="password"
-                      required
-                      minLength={6}
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      className="h-12 text-base"
-                      autoComplete="new-password"
-                    />
-                  </div>
-                  <Button type="submit" disabled={busy} className="h-12 text-base">
-                    {busy ? "Saving…" : "Set new password & sign in"}
-                  </Button>
-                  <button
-                    type="button"
-                    onClick={sendResetCode}
-                    disabled={busy}
-                    className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-                  >
-                    Send a new code
-                  </button>
-                </form>
+              <Button onClick={sendResetCode} disabled={busy || !email} className="h-12 text-base">
+                {busy ? "Sending…" : resetSent ? "Send reset link again" : "Email me a reset link"}
+              </Button>
+
+              {resetSent && (
+                <p className="rounded-md bg-secondary p-4 text-sm text-secondary-foreground">
+                  Open the newest email from MedTrack and tap the reset link. If you requested more than one,
+                  only the most recent link will work.
+                </p>
               )}
 
               <button
                 type="button"
-                onClick={() => { setMode("signin"); setCodeSent(false); setCode(""); setNewPassword(""); }}
+                onClick={() => { setMode("signin"); setResetSent(false); }}
                 className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
               >
                 Back to sign in
