@@ -107,7 +107,7 @@ function ResetPassword() {
           </span>
           <h1 className="text-3xl font-semibold tracking-tight">MedTrack</h1>
         </div>
-        <Card className="p-6">
+        <Card className="w-full p-6">
           {status !== "ready" ? (
             <div className="flex flex-col gap-4">
               <div>
@@ -116,7 +116,7 @@ function ResetPassword() {
               </div>
               {status !== "checking" && (
                 <Button asChild className="h-12 text-base">
-                  <Link to="/auth">Request a new reset link</Link>
+                  <a href="/auth?reset=1">Request a new reset link</a>
                 </Button>
               )}
             </div>

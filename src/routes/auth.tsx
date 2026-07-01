@@ -42,6 +42,7 @@ function AuthPage() {
   const [resetSent, setResetSent] = useState(false);
 
   useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("reset") === "1") setMode("reset");
     supabase.auth.getUser().then(({ data }) => {
       if (data.user) navigate({ to: "/home" });
     });
