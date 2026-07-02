@@ -20,6 +20,19 @@ export const Route = createFileRoute("/auth")({
 
 type Mode = "signin" | "signup" | "reset";
 
+const PREVIEW_ORIGIN = "https://id-preview--b6828faa-d6b3-4f17-9020-faebda7a4137.lovable.app";
+
+function getAuthRedirectOrigin() {
+  const origin = window.location.origin;
+  const host = window.location.hostname;
+
+  if (host.endsWith("lovableproject.com") || host === "localhost") {
+    return PREVIEW_ORIGIN;
+  }
+
+  return origin;
+}
+
 function friendlyAuthError(message: string): string {
   const m = message.toLowerCase();
   if (m.includes("invalid login")) return "That email and password don't match. Try again, or use \"Forgot your password?\" below.";
@@ -57,7 +70,7 @@ function AuthPage() {
           email,
           password,
           options: {
-            emailRedirectTo: window.location.origin,
+            emailRedirectTo: getAuthRedirectOrigin(),
             data: { display_name: displayName, relationship_label: relationship },
           },
         });
@@ -83,7 +96,7 @@ function AuthPage() {
     }
     setBusy(true);
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: `${getAuthRedirectOrigin()}/reset-password`,
     });
     setBusy(false);
     if (error) {
