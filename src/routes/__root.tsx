@@ -87,6 +87,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@medtrack" },
+      { name: "twitter:title", content: "MedTrack — Family medical tracker" },
+      { name: "twitter:description", content: "A simple, shared place to keep your family's providers, appointments, and medications." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/c528353e-30ff-4aa9-b5eb-f6b4b54aff06/id-preview-3e046826--b6828faa-d6b3-4f17-9020-faebda7a4137.lovable.app-1782994139652.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/c528353e-30ff-4aa9-b5eb-f6b4b54aff06/id-preview-3e046826--b6828faa-d6b3-4f17-9020-faebda7a4137.lovable.app-1782994139652.png" },
     ],
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
