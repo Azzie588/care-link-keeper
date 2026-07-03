@@ -57,6 +57,7 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
 
   const [resetSent, setResetSent] = useState(false);
+  const [resetCode, setResetCode] = useState("");
 
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get("reset") === "1") setMode("reset");
@@ -69,20 +70,34 @@ function AuthPage() {
     e.preventDefault();
     setBusy(true);
     try {
+      const cleanEmail = normalizeEmail(email);
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
-          email,
+        const { data, error } = await supabase.auth.signUp({
+          email: cleanEmail,
           password,
           options: {
             emailRedirectTo: getAuthRedirectOrigin(),
-            data: { display_name: displayName, relationship_label: relationship },
+            data: { display_name: displayName.trim(), relationship_label: relationship.trim() || "Me" },
           },
         });
         if (error) throw error;
+
+        if (data.user?.identities?.length === 0) {
+          toast.error("That email already has an account. Sign in, or reset the password to choose a new one.");
+          setMode("signin");
+          return;
+        }
+
+        if (!data.session) {
+          toast.success("Account created. Check your email to finish setting it up, then sign in.");
+          setMode("signin");
+          return;
+        }
+
         toast.success("Account created. You're signed in.");
         navigate({ to: "/home" });
       } else if (mode === "signin") {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
         if (error) throw error;
         navigate({ to: "/home" });
       }
@@ -94,12 +109,13 @@ function AuthPage() {
   }
 
   async function sendResetCode() {
-    if (!email) {
+    const cleanEmail = normalizeEmail(email);
+    if (!cleanEmail) {
       toast.error("Enter your email above first.");
       return;
     }
     setBusy(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
       redirectTo: `${getAuthRedirectOrigin()}/reset-password`,
     });
     setBusy(false);
@@ -107,8 +123,28 @@ function AuthPage() {
       toast.error(friendlyAuthError(error.message));
     } else {
       setResetSent(true);
-      toast.success("Check your email for a password reset link.");
+      toast.success("Check your email for a password reset link or code.");
     }
+  }
+
+  async function useResetCode() {
+    const cleanEmail = normalizeEmail(email);
+    const cleanCode = resetCode.replace(/\D/g, "");
+    if (!cleanEmail || !cleanCode) {
+      toast.error("Enter your email and the code from the newest reset email.");
+      return;
+    }
+
+    setBusy(true);
+    const { error } = await supabase.auth.verifyOtp({
+      email: cleanEmail,
+      token: cleanCode,
+      type: "recovery",
+    });
+    setBusy(false);
+
+    if (error) toast.error(friendlyAuthError(error.message));
+    else navigate({ to: "/reset-password" });
   }
 
   return (
