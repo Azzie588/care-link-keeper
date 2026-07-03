@@ -166,7 +166,7 @@ function AuthPage() {
               <div>
                 <h2 className="text-xl font-semibold">Reset your password</h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  We'll email you a secure link that brings you back here to choose a new password.
+                  We'll email you a secure link or code so you can choose a new password.
                 </p>
               </div>
               <div className="flex flex-col gap-2">
@@ -177,6 +177,7 @@ function AuthPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  onBlur={(e) => setEmail(normalizeEmail(e.target.value))}
                   className="h-12 text-base"
                   autoComplete="email"
                 />
@@ -187,15 +188,32 @@ function AuthPage() {
               </Button>
 
               {resetSent && (
-                <p className="rounded-md bg-secondary p-4 text-sm text-secondary-foreground">
-                  Open the newest email from MedTrack and tap the reset link. If you requested more than one,
-                  only the most recent link will work.
-                </p>
+                <div className="flex flex-col gap-3 rounded-md bg-secondary p-4 text-sm text-secondary-foreground">
+                  <p>
+                    Open the newest email from MedTrack and tap the reset link. If the link will not open, paste
+                    the code from that same email below.
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="r-code" className="text-base text-secondary-foreground">Reset code</Label>
+                    <Input
+                      id="r-code"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      value={resetCode}
+                      onChange={(e) => setResetCode(e.target.value)}
+                      className="h-12 bg-background text-base"
+                      placeholder="Code from newest email"
+                    />
+                  </div>
+                  <Button type="button" onClick={useResetCode} disabled={busy || !resetCode} className="h-12 text-base">
+                    Use reset code
+                  </Button>
+                </div>
               )}
 
               <button
                 type="button"
-                onClick={() => { setMode("signin"); setResetSent(false); }}
+                onClick={() => { setMode("signin"); setResetSent(false); setResetCode(""); }}
                 className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
               >
                 Back to sign in
@@ -236,6 +254,7 @@ function AuthPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  onBlur={(e) => setEmail(normalizeEmail(e.target.value))}
                   className="h-12 text-base"
                   autoComplete="email"
                 />
