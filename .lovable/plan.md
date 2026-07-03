@@ -1,29 +1,22 @@
-## What's happening
+## Goal
+Make sign-in reliable and give a clear explanation when a known password is rejected.
 
-Two separate things went wrong:
+## What I’ll check
+1. **Account state**
+   - Confirm whether the email account exists, is confirmed/active, or has been locked into a recovery/sign-up state.
+   - Check whether repeated sign-ups created confusing “already exists” behavior while the saved password stayed different.
 
-1. **Sign-in failed** — the password you typed didn't match the one saved at sign-up (backend returned "Invalid login credentials"). Nothing is broken; the password was just different.
-2. **Reset-password link is broken** — clicking the email link shows "This site can't provide a secure connection." That's the real bug. The reset email is being generated with a redirect that the auth backend isn't allowed to send you to, so the browser lands on an invalid URL instead of your app.
+2. **Auth settings**
+   - Verify email/password sign-in is enabled.
+   - Verify password rules and leaked-password checks are not silently blocking password changes.
+   - Confirm redirect URLs are not interfering with reset/update-password sessions.
 
-Yes — you do need an account to save real data (each family's data is private and locked to their login). Once these are fixed, you'll be able to reset, sign in, and start adding providers.
+3. **App sign-in flow**
+   - Review the `/auth` and `/reset-password` pages for anything that could submit an old value, trim incorrectly, navigate too soon, or leave the user thinking the password changed when it did not.
+   - Make the error message more specific: wrong password vs. unconfirmed account vs. reset link/code expired.
 
-## Plan
+4. **Recovery fallback if needed**
+   - If the password cannot be trusted because reset links are failing, add a safer “set a new password” path that uses the backend recovery flow correctly and clearly tells the user to use the newest email.
 
-1. **Fix the reset-password redirect**
-   - Configure the Lovable Cloud auth settings so the app's preview URL (and future published URL) are on the allowed redirect list.
-   - Confirm `/reset-password` is a public route (not behind the auth gate) so the link opens without a login wall.
-   - Verify the reset page correctly reads the recovery token from the URL and calls "update password" before sending you to Home.
-
-2. **Make sign-in errors clearer on the auth screen**
-   - Show a friendly message like "That email and password don't match. Try again or reset your password." instead of the raw backend text.
-   - Keep the "Forgot your password?" link prominent right under the sign-in button.
-
-3. **Verify end-to-end**
-   - Trigger a password reset for your account, follow the link, set a new password, and confirm you land signed-in on Home.
-
-## Not changing
-
-- Sign-up flow, database, providers feature, or design — all stay as they are.
-- Email confirmation stays off, so new accounts sign in immediately after sign-up.
-
-After you approve, I'll make the changes and walk the reset flow end-to-end to confirm it works before handing back.
+## Expected result
+You should either be able to sign in with the current password, or the app will clearly tell you why not and give one working path to set a new password.
