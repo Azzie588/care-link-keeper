@@ -22,6 +22,10 @@ type Mode = "signin" | "signup" | "reset";
 
 const PREVIEW_ORIGIN = "https://id-preview--b6828faa-d6b3-4f17-9020-faebda7a4137.lovable.app";
 
+function normalizeEmail(value: string) {
+  return value.trim().toLowerCase();
+}
+
 function getAuthRedirectOrigin() {
   const origin = window.location.origin;
   const host = window.location.hostname;
@@ -35,7 +39,7 @@ function getAuthRedirectOrigin() {
 
 function friendlyAuthError(message: string): string {
   const m = message.toLowerCase();
-  if (m.includes("invalid login")) return "That email and password don't match. Try again, or use \"Forgot your password?\" below.";
+  if (m.includes("invalid login")) return "That email and password don't match. If you tried creating the account again, it kept the old password. Use \"Forgot your password?\" to set a new one.";
   if (m.includes("already registered") || m.includes("already been registered")) return "An account with that email already exists. Try signing in instead.";
   if (m.includes("email not confirmed")) return "Please confirm your email first, then sign in.";
   if (m.includes("token") && m.includes("expired")) return "That code has expired. Send a new one and try again.";
