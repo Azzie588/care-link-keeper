@@ -22,6 +22,10 @@ type Mode = "signin" | "signup" | "reset";
 
 const PREVIEW_ORIGIN = "https://id-preview--b6828faa-d6b3-4f17-9020-faebda7a4137.lovable.app";
 
+function normalizeEmail(value: string) {
+  return value.trim().toLowerCase();
+}
+
 function getAuthRedirectOrigin() {
   const origin = window.location.origin;
   const host = window.location.hostname;
@@ -35,7 +39,7 @@ function getAuthRedirectOrigin() {
 
 function friendlyAuthError(message: string): string {
   const m = message.toLowerCase();
-  if (m.includes("invalid login")) return "That email and password don't match. Try again, or use \"Forgot your password?\" below.";
+  if (m.includes("invalid login")) return "That email and password don't match. If you tried creating the account again, it kept the old password. Use \"Forgot your password?\" to set a new one.";
   if (m.includes("already registered") || m.includes("already been registered")) return "An account with that email already exists. Try signing in instead.";
   if (m.includes("email not confirmed")) return "Please confirm your email first, then sign in.";
   if (m.includes("token") && m.includes("expired")) return "That code has expired. Send a new one and try again.";
@@ -53,6 +57,7 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
 
   const [resetSent, setResetSent] = useState(false);
+  const [resetCode, setResetCode] = useState("");
 
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get("reset") === "1") setMode("reset");
@@ -65,20 +70,34 @@ function AuthPage() {
     e.preventDefault();
     setBusy(true);
     try {
+      const cleanEmail = normalizeEmail(email);
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
-          email,
+        const { data, error } = await supabase.auth.signUp({
+          email: cleanEmail,
           password,
           options: {
             emailRedirectTo: getAuthRedirectOrigin(),
-            data: { display_name: displayName, relationship_label: relationship },
+            data: { display_name: displayName.trim(), relationship_label: relationship.trim() || "Me" },
           },
         });
         if (error) throw error;
+
+        if (data.user?.identities?.length === 0) {
+          toast.error("That email already has an account. Sign in, or reset the password to choose a new one.");
+          setMode("signin");
+          return;
+        }
+
+        if (!data.session) {
+          toast.success("Account created. Check your email to finish setting it up, then sign in.");
+          setMode("signin");
+          return;
+        }
+
         toast.success("Account created. You're signed in.");
         navigate({ to: "/home" });
       } else if (mode === "signin") {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
         if (error) throw error;
         navigate({ to: "/home" });
       }
@@ -90,12 +109,13 @@ function AuthPage() {
   }
 
   async function sendResetCode() {
-    if (!email) {
+    const cleanEmail = normalizeEmail(email);
+    if (!cleanEmail) {
       toast.error("Enter your email above first.");
       return;
     }
     setBusy(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
       redirectTo: `${getAuthRedirectOrigin()}/reset-password`,
     });
     setBusy(false);
@@ -103,8 +123,28 @@ function AuthPage() {
       toast.error(friendlyAuthError(error.message));
     } else {
       setResetSent(true);
-      toast.success("Check your email for a password reset link.");
+      toast.success("Check your email for a password reset link or code.");
     }
+  }
+
+  async function useResetCode() {
+    const cleanEmail = normalizeEmail(email);
+    const cleanCode = resetCode.replace(/\D/g, "");
+    if (!cleanEmail || !cleanCode) {
+      toast.error("Enter your email and the code from the newest reset email.");
+      return;
+    }
+
+    setBusy(true);
+    const { error } = await supabase.auth.verifyOtp({
+      email: cleanEmail,
+      token: cleanCode,
+      type: "recovery",
+    });
+    setBusy(false);
+
+    if (error) toast.error(friendlyAuthError(error.message));
+    else navigate({ to: "/reset-password" });
   }
 
   return (
@@ -126,7 +166,7 @@ function AuthPage() {
               <div>
                 <h2 className="text-xl font-semibold">Reset your password</h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  We'll email you a secure link that brings you back here to choose a new password.
+                  We'll email you a secure link or code so you can choose a new password.
                 </p>
               </div>
               <div className="flex flex-col gap-2">
@@ -137,6 +177,7 @@ function AuthPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  onBlur={(e) => setEmail(normalizeEmail(e.target.value))}
                   className="h-12 text-base"
                   autoComplete="email"
                 />
@@ -147,15 +188,32 @@ function AuthPage() {
               </Button>
 
               {resetSent && (
-                <p className="rounded-md bg-secondary p-4 text-sm text-secondary-foreground">
-                  Open the newest email from MedTrack and tap the reset link. If you requested more than one,
-                  only the most recent link will work.
-                </p>
+                <div className="flex flex-col gap-3 rounded-md bg-secondary p-4 text-sm text-secondary-foreground">
+                  <p>
+                    Open the newest email from MedTrack and tap the reset link. If the link will not open, paste
+                    the code from that same email below.
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="r-code" className="text-base text-secondary-foreground">Reset code</Label>
+                    <Input
+                      id="r-code"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      value={resetCode}
+                      onChange={(e) => setResetCode(e.target.value)}
+                      className="h-12 bg-background text-base"
+                      placeholder="Code from newest email"
+                    />
+                  </div>
+                  <Button type="button" onClick={useResetCode} disabled={busy || !resetCode} className="h-12 text-base">
+                    Use reset code
+                  </Button>
+                </div>
               )}
 
               <button
                 type="button"
-                onClick={() => { setMode("signin"); setResetSent(false); }}
+                onClick={() => { setMode("signin"); setResetSent(false); setResetCode(""); }}
                 className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
               >
                 Back to sign in
@@ -196,6 +254,7 @@ function AuthPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  onBlur={(e) => setEmail(normalizeEmail(e.target.value))}
                   className="h-12 text-base"
                   autoComplete="email"
                 />

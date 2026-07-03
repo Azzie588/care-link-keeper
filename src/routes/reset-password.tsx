@@ -18,6 +18,14 @@ export const Route = createFileRoute("/reset-password")({
   component: ResetPassword,
 });
 
+function friendlyResetError(message: string) {
+  const m = message.toLowerCase();
+  if (m.includes("expired")) return "That reset link or code has expired. Please request a new one.";
+  if (m.includes("invalid") && (m.includes("token") || m.includes("otp"))) return "That reset link or code isn't right. Please use the newest email from MedTrack.";
+  if (m.includes("password")) return message;
+  return "This reset link could not be opened. Please request a new one.";
+}
+
 function ResetPassword() {
   const navigate = useNavigate();
   const [status, setStatus] = useState<"checking" | "ready" | "missing" | "error">("checking");
@@ -55,6 +63,16 @@ function ResetPassword() {
           if (error) throw error;
         }
 
+        const accessToken = hash.get("access_token");
+        const refreshToken = hash.get("refresh_token");
+        if (accessToken && refreshToken) {
+          const { error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+          if (error) throw error;
+        }
+
         const tokenHash = search.get("token_hash") || hash.get("token_hash");
         const type = search.get("type") || hash.get("type");
         if (tokenHash && type === "recovery") {
@@ -75,7 +93,7 @@ function ResetPassword() {
       } catch (err) {
         if (!mounted) return;
         setStatus("error");
-        setMessage(err instanceof Error ? err.message : "This reset link couldn't be opened.");
+        setMessage(friendlyResetError(err instanceof Error ? err.message : "This reset link couldn't be opened."));
       }
     }
 
@@ -91,7 +109,7 @@ function ResetPassword() {
     setBusy(true);
     const { error } = await supabase.auth.updateUser({ password });
     setBusy(false);
-    if (error) toast.error(error.message);
+    if (error) toast.error(friendlyResetError(error.message));
     else {
       toast.success("Password updated. You're signed in.");
       navigate({ to: "/home" });
