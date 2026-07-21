@@ -1,0 +1,6 @@
+name = "care-link-keeper"
+pages_build_output_dir = "dist"
+
+[vars]
+VITE_SUPABASE_URL = "https://xpndmrfebnogidcrarur.supabase.co"
+VITE_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_A2oLPtlnTbRPuF_UkKoDWg_GNCDL0St"
