@@ -189,4 +189,3 @@ export async function searchNpi(input: unknown): Promise<NpiResult[]> {
     };
   });
 }
-EOF
