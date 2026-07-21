@@ -1,4 +1,3 @@
-cat > src/lib/providers.functions.ts << 'EOF'
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 
