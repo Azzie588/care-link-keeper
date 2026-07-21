@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import {
   Plus,
   Stethoscope,
@@ -108,7 +107,7 @@ const emptyForm: FormState = {
 };
 
 function Providers() {
-  const list = useServerFn(listProviders);
+  const list = listProviders;
   const qc = useQueryClient();
   const { data: providers = [], isLoading } = useQuery({
     queryKey: ["providers"],
@@ -147,9 +146,9 @@ function Providers() {
           : [{ ...emptyLocation }],
     });
 
-  const del = useServerFn(deleteProvider);
+  const del = deleteProvider;
   const delMutation = useMutation({
-    mutationFn: (id: string) => del({ data: { id } }),
+    mutationFn: (id: string) => del( { id } ),
     onSuccess: () => {
       toast.success("Provider deleted");
       qc.invalidateQueries({ queryKey: ["providers"] });
@@ -323,8 +322,8 @@ function ProviderDialog({
   onSaved: () => void;
 }) {
   const [form, setForm] = useState<FormState>(initial);
-  const create = useServerFn(createProvider);
-  const update = useServerFn(updateProvider);
+  const create = createProvider;
+  const update = updateProvider;
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -350,9 +349,9 @@ function ProviderDialog({
         })),
       };
       if (form.id) {
-        return update({ data: { id: form.id, ...payload } });
+        return update({ id: form.id, ...payload });
       }
-      return create({ data: payload });
+      return create(payload);
     },
     onSuccess: () => {
       toast.success(form.id ? "Provider updated" : "Provider added");
@@ -574,9 +573,9 @@ function Field({
 
 function NpiSearch({ onPick }: { onPick: (r: NpiResult) => void }) {
   const [q, setQ] = useState("");
-  const search = useServerFn(searchNpi);
+  const search = searchNpi;
   const m = useMutation({
-    mutationFn: async () => search({ data: { query: q.trim() } }),
+    mutationFn: async () => search( { query: q.trim() } ),
     onError: (e: Error) => toast.error(e.message),
   });
 
