@@ -5,7 +5,7 @@ const medicationInput = z.object({
   name: z.string().min(1, "Name is required"),
   dosage: z.string().nullable().optional(),
   frequency: z.string().nullable().optional(),
-  prescriber: z.string().nullable().optional(),
+  provider_id: z.string().uuid().nullable().optional(),
   pharmacy: z.string().nullable().optional(),
   date_filled: z.string().nullable().optional(),
   refill_reminder_date: z.string().nullable().optional(),
@@ -16,7 +16,7 @@ const medicationInput = z.object({
 export async function listMedications() {
   const { data, error } = await supabase
     .from("medications")
-    .select("*")
+    .select("*, providers(name)")
     .order("name", { ascending: true });
   if (error) throw new Error(error.message);
   return data ?? [];

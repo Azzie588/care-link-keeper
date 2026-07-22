@@ -12,6 +12,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Dialog,
   DialogContent,
   DialogFooter,
@@ -35,6 +42,7 @@ import {
   listMedications,
   updateMedication,
 } from "@/lib/medications.functions";
+import { listProviders } from "@/lib/providers.functions";
 
 export const Route = createFileRoute("/_authenticated/medications")({
   component: Medications,
@@ -47,7 +55,7 @@ type FormState = {
   name: string;
   dosage: string;
   frequency: string;
-  prescriber: string;
+  provider_id: string;
   pharmacy: string;
   date_filled: string;
   refill_reminder_date: string;
@@ -59,7 +67,7 @@ const emptyForm: FormState = {
   name: "",
   dosage: "",
   frequency: "",
-  prescriber: "",
+  provider_id: "",
   pharmacy: "",
   date_filled: "",
   refill_reminder_date: "",
@@ -73,6 +81,10 @@ function Medications() {
     queryKey: ["medications"],
     queryFn: () => listMedications(),
   });
+  const { data: providers = [] } = useQuery({
+    queryKey: ["providers"],
+    queryFn: () => listProviders(),
+  });
 
   const [editing, setEditing] = useState<FormState | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -84,7 +96,7 @@ function Medications() {
       name: m.name ?? "",
       dosage: m.dosage ?? "",
       frequency: m.frequency ?? "",
-      prescriber: m.prescriber ?? "",
+      provider_id: (m as any).provider_id ?? "",
       pharmacy: m.pharmacy ?? "",
       date_filled: m.date_filled ?? "",
       refill_reminder_date: m.refill_reminder_date ?? "",
@@ -141,6 +153,7 @@ function Medications() {
       {editing ? (
         <MedicationDialog
           initial={editing}
+          providers={providers}
           onClose={() => setEditing(null)}
           onSaved={() => {
             qc.invalidateQueries({ queryKey: ["medications"] });
@@ -181,6 +194,8 @@ function MedicationCard({
   onEdit: () => void;
   onDelete: () => void;
 }) {
+  const providerName = (medication as any).providers?.name as string | undefined;
+
   return (
     <Card className="p-5">
       <div className="flex items-start justify-between gap-3">
@@ -216,7 +231,7 @@ function MedicationCard({
         </div>
       </div>
       <div className="mt-3 space-y-1.5 text-sm text-foreground/80">
-        {medication.prescriber ? <p>Prescriber: {medication.prescriber}</p> : null}
+        {providerName ? <p>Prescriber: {providerName}</p> : null}
         {medication.pharmacy ? <p>Pharmacy: {medication.pharmacy}</p> : null}
         {medication.date_filled ? <p>Filled: {medication.date_filled}</p> : null}
         {medication.refill_reminder_date ? (
@@ -229,10 +244,12 @@ function MedicationCard({
 
 function MedicationDialog({
   initial,
+  providers,
   onClose,
   onSaved,
 }: {
   initial: FormState;
+  providers: Awaited<ReturnType<typeof listProviders>>;
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -244,7 +261,7 @@ function MedicationDialog({
         name: form.name.trim(),
         dosage: form.dosage || null,
         frequency: form.frequency || null,
-        prescriber: form.prescriber || null,
+        provider_id: form.provider_id || null,
         pharmacy: form.pharmacy || null,
         date_filled: form.date_filled || null,
         refill_reminder_date: form.refill_reminder_date || null,
@@ -282,7 +299,32 @@ function MedicationDialog({
             <Field label="Dosage" value={form.dosage} onChange={(v) => setForm({ ...form, dosage: v })} placeholder="10mg" />
             <Field label="Frequency" value={form.frequency} onChange={(v) => setForm({ ...form, frequency: v })} placeholder="Once daily" />
           </div>
-          <Field label="Prescriber" value={form.prescriber} onChange={(v) => setForm({ ...form, prescriber: v })} />
+
+          <div>
+            <Label className="text-base">Prescriber</Label>
+            <Select
+              value={form.provider_id || undefined}
+              onValueChange={(v) => setForm({ ...form, provider_id: v })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a provider" />
+              </SelectTrigger>
+              <SelectContent>
+                {providers.length === 0 ? (
+                  <div className="px-3 py-2 text-sm text-muted-foreground">
+                    No providers yet — add one first
+                  </div>
+                ) : (
+                  providers.map((p: any) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.name}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+
           <Field label="Pharmacy" value={form.pharmacy} onChange={(v) => setForm({ ...form, pharmacy: v })} />
           <div className="grid grid-cols-2 gap-3">
             <div>
